@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Load Multiple GeoJSON in OpenLayers</title>
+<script src="https://cdn.jsdelivr.net/npm/ol@v10.2.0/dist/ol.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v10.2.0/ol.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/themes/default/style.min.css" />
+  <style>
+    #map {
+      width: 70%;
+      height: 90vh; /* Reduce height to make room for buttons */
+	  float:left;
+    }
+    #controls {
+      padding: 10px;
+      text-align: center;
+    }
+    button {
+      margin: 5px;
+    }
+    #treeView {
+        margin: 20px;
+        max-width: 300px;
+		/*background:#ff0000;*/
+		width:20%;
+		float:left;
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <div id="treeView"></div>
+  
+  <div id="controls">
+    <button onclick="toggleLayer(0)">Toggle peilvak Layer</button>
+    <button onclick="toggleLayer(1)">Toggle deelstroom Layer</button>
+    <button onclick="toggleLayer(2)">Toggle hoofdstroom Layer</button>
+    <!-- New button to pan and zoom to a specific location -->
+    <button onclick="panToLocation(5.1214201, 52.0907374,10)">Pan to Utrecht</button>
+	<button onclick="styleSpecificFeatures(['0352'])">Style Feature: Wijk bij Duurstede</button>
+  </div>
+  
+  <script>
+    // Create the map object with initial view
+    const map = new ol.Map({
+      target: 'map',
+      layers: [
+        new ol.layer.Tile({
+          source: new ol.source.OSM()
+        })
+      ],
+      view: new ol.View({
+        center: ol.proj.fromLonLat([5.0, 52.0]), // Coordinates of the Netherlands
+        zoom: 7
+      })
+    });
+
+    // Function to create vector layer from GeoJSON
+    function createGeoJsonLayer(geojsonUrl) {
+      return new ol.layer.Vector({
+        source: new ol.source.Vector({
+          url: geojsonUrl,
+          format: new ol.format.GeoJSON()
+        }),
+        visible: true // Make layer visible initially
+      });
+    }
+
+    // URLs of multiple GeoJSON files
+    const geojsonUrls = [
+      'peilgebieden.geojson',
+      'deelstroom.geojson',
+      'hoofdstroom4.geojson' // Local or third-party URL for postcodes
+    ];
+
+    // Array to hold the GeoJSON layers
+    const geojsonLayers = [];
+
+    // Add each GeoJSON layer to the map and the array
+    geojsonUrls.forEach(url => {
+      const geojsonLayer = createGeoJsonLayer(url);
+      geojsonLayers.push(geojsonLayer);
+      map.addLayer(geojsonLayer);
+    });
+	
+	
+
+    // Function to toggle the visibility of layers
+    function toggleLayer(index) {
+      const layer = geojsonLayers[index];
+      layer.setVisible(!layer.getVisible());
+    }
+	
+    // Function to turn off layers
+    function turnoffLayer(index) {
+      const layer = geojsonLayers[index];
+      layer.setVisible(false);
+    }
+	
+    // Function to turn off layers
+    function turnonLayer(index) {
+      const layer = geojsonLayers[index];
+      layer.setVisible(true);
+    }
+
+    // Function to reset the style of all features in all layers
+    function resetAllFeatureStyles() {
+      geojsonLayers.forEach(layer => {
+        if (layer.getVisible()) {
+          layer.getSource().getFeatures().forEach(feature => {
+			  // if(feature.get('soort')==='hoofdstroom') {
+// 	  			const featureName = feature.get('name');
+// 	  	        feature.setStyle(new ol.style.Style({
+// 	  	          fill: new ol.style.Fill({
+// 	  	            color: 'rgba(0, 0, 255, 0.4)' // Blue color with transparency
+// 	  	          }),
+// 	  	          stroke: new ol.style.Stroke({
+// 	  	            color: '#0000FF',
+// 	  	            width: 2
+// 	  	          }),
+// 	  	          text: new ol.style.Text({
+// 	  	            text: featureName || '', // Display the feature's name (if available)
+// 	  	            font: 'bold 12px sans-serif',
+// 	  	            fill: new ol.style.Fill({ color: '#000' }),
+// 	  	            stroke: new ol.style.Stroke({ color: '#FFF', width: 3 })
+// 	  	          })
+// 	  	        }));
+// 			  } else {
+			  	feature.setStyle(null); // Reset to default style
+			  //}
+          });
+        }
+      });
+						   featureStyle('hoofdstroom',1,'rgba(0, 255, 0, 0.2)','#000000')
+						   featureStyle('hoofdstroom',2,'rgba(0, 0, 255, 0.2)','#000000')
+						   featureStyle('hoofdstroom',3,'rgba(255, 0, 255, 0.2)','#000000')
+						   featureStyle('hoofdstroom',4,'rgba(0, 255, 255, 0.2)','#000000')
+						   featureStyle('hoofdstroom',5,'rgba(255, 0, 0, 0.2)','#000000')
+    }
+
+    // Function to set a new style for the clicked feature
+    function setFeatureStyle(feature) {
+	  const featureName = feature.get('name'); // Get the name property o
+      // Define the style with a specific fill color (e.g., blue)
+      feature.setStyle(new ol.style.Style({
+        fill: new ol.style.Fill({
+          color: 'rgba(0, 0, 255, 0.4)' // Blue color with transparency
+        }),
+        stroke: new ol.style.Stroke({
+          color: '#0000FF',
+          width: 2
+        }),
+        text: new ol.style.Text({
+          text: featureName || '', // Display the feature's name (if available)
+          font: 'bold 12px sans-serif',
+          fill: new ol.style.Fill({ color: '#000' }),
+          stroke: new ol.style.Stroke({ color: '#FFF', width: 3 })
+        })
+      }));
+    }
+	
+// Function to find and style a specific feature based on its property (e.g., code)
+	// Function to find and style multiple features based on an array of codes
+	// Function to find and style multiple features based on an array of codes
+	function styleSpecificFeatures(codes) {
+	  resetAllFeatureStyles(); // Reset all styles before applying new ones
+
+	  let featuresFound = [];
+
+	  // Loop through all layers to find features by their property (assumed to be 'code')
+	  geojsonLayers.forEach(layer => {
+	    if (layer.getVisible()) {
+	      layer.getSource().getFeatures().forEach(feature => {
+	        const properties = feature.getProperties();
+        
+	        // Debugging: log the properties to inspect the correct field name
+	        //console.log('Feature properties:', properties);
+
+	        // Assume the property name is 'code'. Adjust if necessary based on actual properties.
+	        // Convert both to strings for comparison consistency.
+	        const featureCode = String(properties.code);
+			const pc4Code = String(properties.pc4_code);
+
+	        // Check if the feature's code matches any of the provided codes
+	        if (codes.includes(featureCode) || codes.includes(pc4Code)) {
+	          console.log('Styling feature:', properties);
+          
+	          // Apply the new style to the found feature
+	          setFeatureStyle(feature);
+	          featuresFound.push(properties.name || 'Unnamed feature'); // Store found feature's name
+	        }
+	      });
+	    }
+	  });
+
+	  // Check if any features were found and log the result
+	  if (featuresFound.length === 0) {
+	    console.log(`No features found with the given codes: ${codes.join(', ')}`);
+	  } else {
+	    console.log(`Styled features: ${featuresFound.join(', ')}`);
+	  }
+	}
+	
+	function featureStyle(parsoort,parid,parcolorfill,parcolorborder) {
+	  //resetAllFeatureStyles(); // Reset all styles before applying new ones
+
+	  //let featuresFound = [];
+
+	  // Loop through all layers to find features by their property (assumed to be 'code')
+	  geojsonLayers.forEach(layer => {
+	    //if (layer.getVisible()) {
+	      layer.getSource().getFeatures().forEach(feature => {
+	        //const properties = feature.getProperties();
+			if(feature.get('soort')===parsoort && feature.get('OBJECTID')===parid) {
+				
+		        feature.setStyle(new ol.style.Style({
+		          fill: new ol.style.Fill({
+		            color: parcolorfill // Blue color with transparency
+		          }),
+		          stroke: new ol.style.Stroke({
+		            color: parcolorborder,
+					  width: 1
+		          })
+		        }));
+				
+			}
+        
+	        // Debugging: log the properties to inspect the correct field name
+	        //console.log('Feature properties:', properties);
+
+	        // Assume the property name is 'code'. Adjust if necessary based on actual properties.
+	        // Convert both to strings for comparison consistency.
+			// 	        const featureCode = String(properties.code);
+			// const objectid = String(properties.OBJECTID);
+			// const soort = String(properties.soort);
+			
+			console.log(feature.get('soort'))
+
+	        // Check if the feature's code matches any of the provided codes
+	        // if (codes.includes(featureCode) || codes.includes(pc4Code)) {
+// 	          console.log('Styling feature:', properties);
+//
+// 	          // Apply the new style to the found feature
+// 	          setFeatureStyle(feature);
+// 	          featuresFound.push(properties.name || 'Unnamed feature'); // Store found feature's name
+// 	        }
+	      });
+	    //}
+	  });
+
+	  // Check if any features were found and log the result
+	}
+	
+	
+	// Function to refresh the map and trigger a redraw
+	function refreshMap() {
+	  map.render(); // This will trigger the map to redraw
+	  geojsonLayers.forEach(layer => {
+	    const source = layer.getSource();
+	    source.changed(); // This forces the source to re-render the features
+	  });
+
+	}
+
+    // Add click event to change the color of clicked feature and reset others
+    map.on('click', function (evt) {
+      // Reset all feature styles before applying a new style
+      resetAllFeatureStyles();
+
+      // Check for clicked feature only in visible layers
+      let featureFound = false;
+      geojsonLayers.forEach(layer => {
+        if (layer.getVisible()) {
+          // Get the clicked feature at the clicked position
+          map.forEachFeatureAtPixel(evt.pixel, function (feature) {
+            if (feature && !featureFound) {
+              // Log the properties of the clicked feature to the console
+              console.log('Feature clicked:', feature.getProperties());
+
+              // Set a new color style to the clicked feature
+              setFeatureStyle(feature);
+              featureFound = true; // Avoid changing styles on multiple features
+            }
+          }, { layerFilter: function(layerToCheck) { return layerToCheck === layer; } });
+        }
+      });
+    });
+
+    // Function to pan and zoom to a specific longitude/latitude
+    function panToLocation(lon, lat, zoom) {
+      const view = map.getView();
+      const location = ol.proj.fromLonLat([lon, lat]); // Convert to map projection
+      
+      // Animate to the new location
+      view.animate({
+        center: location, // Center the map at the provided coordinates
+        zoom: zoom,        // Zoom level to focus
+        duration: 1500   // Duration of the animation in milliseconds (2 seconds)
+      });
+    }
+  </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+       <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/jstree.min.js"></script>
+	   <script>
+	           $(function () {
+	               // Sample data for the tree view
+	               var treeData = [
+	                   {
+	                       "id": "1",
+	                       "parent": "#",
+	                       "text": "Werkgebied WDODelta"
+	                   },
+	                   {
+	                       "id": "2",
+	                       "parent": "#",
+	                       "text": "Root Node 2"
+	                   },
+	                   {
+	                       "id": "3",
+	                       "parent": "1",
+	                       "text": "Hoofdstroomgebied 1"
+	                   },
+	                   {
+	                       "id": "4",
+	                       "parent": "1",
+	                       "text": "Hoofdstroomgebied 2"
+	                   },
+	                   {
+	                       "id": "5",
+	                       "parent": "2",
+	                       "text": "Child Node 3"
+	                   },
+	                   {
+	                       "id": "6",
+	                       "parent": "2",
+	                       "text": "Child Node 4"
+	                   }
+	               ];
+
+	               // Initialize jsTree
+	               $('#treeView').jstree({
+	                   'core': {
+	                       'data': treeData
+	                   },
+					   "plugins" : [ "wholerow" ]
+	               });
+				   
+	               // Bind click event
+	               $('#treeView').on('select_node.jstree', function (e, data) {
+	                   var selectedNode = data.node; // Get the selected node
+					   if(selectedNode.id==1)
+					   {
+						   //alert("4!");
+						   //console.log('hier?')
+						   turnoffLayer(0)
+						   turnoffLayer(1)
+						   turnonLayer(2)
+						   //styleSpecificFeatures(['7954','8061','8294','8281'])
+						   // featureStyle('hoofdstroom',1,'rgba(0, 255, 0, 0.2)','#000000')
+						   // featureStyle('hoofdstroom',2,'rgba(0, 0, 255, 0.2)','#000000')
+						   // featureStyle('hoofdstroom',3,'rgba(255, 0, 255, 0.2)','#000000')
+						   // featureStyle('hoofdstroom',4,'rgba(0, 255, 255, 0.2)','#000000')
+						   // featureStyle('hoofdstroom',5,'rgba(255, 0, 0, 0.2)','#000000')
+						   refreshMap()
+						   //styleSpecificFeatures(['7415', '0352'])
+						   panToLocation(6.273728538808915, 52.61580224592612,9.5) 
+					   }
+					   if(selectedNode.id==4)
+						   {
+							   console.log('id 4')
+							   refreshMap()
+							   //alert("4!");
+							   turnoffLayer(0)
+							   turnonLayer(1)
+							   turnonLayer(2)
+							   panToLocation(6.047701820561513, 52.786000889343974,11)
+						   }
+						   if(selectedNode.id==3)
+							   {
+								   //alert("4!");
+								   panToLocation(6.460231808097329, 52.81292115074307,10.5) 
+								   turnoffLayer(0)
+								   turnonLayer(1)
+								   turnonLayer(2)
+
+								   refreshMap()
+								   //styleSpecificFeatures(['7415', '0352'])
+								  
+							   }
+	                   //alert("You clicked on: " + selectedNode.text);
+	               });
+	           });
+	       </script>
+			   <script>
+				   $(window).on('load', function() {
+				       // Your code here will run after everything (DOM, images, scripts) has loaded
+				       console.log('Everything is fully loaded!');
+				   });
+				   
+				   map.once('rendercomplete', function() {
+				       console.log('Map and all layers have fully loaded!');
+					   resetAllFeatureStyles();
+						   turnoffLayer(0)
+						   turnoffLayer(1)
+						   turnonLayer(2)
+				       // Your code here
+				   });
+				
+			   </script>
+			   ola
+			   
+</body>
+</html>
